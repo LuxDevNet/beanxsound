@@ -1,0 +1,8 @@
+# Rust build output
+/target
+
+# Build/dist output
+/dist
+
+# Installer/build artifacts
+*.exe
