@@ -1,0 +1,13 @@
+[package]
+name = "beanxdsp"
+version = "0.1.0"
+edition = "2021"
+description = "beanxsound DSP core: biquad EQ, dynamics, stereo tools. No Windows types, no allocation in the audio path."
+license = "MIT"
+publish = false
+
+[lib]
+name = "beanxdsp"
+path = "src/lib.rs"
+
+[dev-dependencies]

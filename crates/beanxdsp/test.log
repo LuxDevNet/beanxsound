@@ -1,0 +1,19 @@
+   Compiling beanxdsp v0.1.0 (Z:\luxdev-z\Dev\002-Tier-Two-Projects\beanxsound\crates\beanxdsp)
+    Finished `release` profile [optimized] target(s) in 0.32s
+     Running unittests src\lib.rs (target\release\build\beanxdsp/2baf09b6d048010b\out\beanxdsp-2baf09b6d048010b.exe)
+
+running 5 tests
+test tests::bypass_is_bit_exact ... ok
+test tests::width_zero_collapses_to_mono ... ok
+test tests::limiter_keeps_output_under_the_ceiling ... ok
+test tests::peaking_band_hits_its_target ... ok
+test tests::flat_when_all_bands_are_zero ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests beanxdsp
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

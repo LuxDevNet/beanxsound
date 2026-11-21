@@ -6,7 +6,7 @@ use eframe::egui::{
 };
 
 use crate::audio::{self, AudioDevice, AudioEngine, Role, Snapshot};
-use crate::fxsound::{FxClient, FxEvent, FxStatus};
+use crate::engine::{Client as FxClient, Event as FxEvent, Status as FxStatus};
 use crate::presets::{self, EqBand, Effects, PresetStore, UserPreset};
 use crate::theme as th;
 use crate::winshell;
@@ -15,7 +15,7 @@ use crate::winshell;
 enum Tab {
     Devices,
     Mixer,
-    FxSound,
+    Engine,
     Presets,
     Advanced,
 }
@@ -25,7 +25,7 @@ impl Tab {
         match self {
             Tab::Devices => "Devices",
             Tab::Mixer => "App mixer",
-            Tab::FxSound => "FxSound",
+            Tab::Engine => "Engine",
             Tab::Presets => "Presets",
             Tab::Advanced => "Advanced",
         }
@@ -34,7 +34,7 @@ impl Tab {
         match self {
             Tab::Devices => "◉",
             Tab::Mixer => "▤",
-            Tab::FxSound => "≈",
+            Tab::Engine => "≈",
             Tab::Presets => "✦",
             Tab::Advanced => "⚙",
         }
@@ -43,7 +43,7 @@ impl Tab {
         match self {
             Tab::Devices => "Outputs & inputs",
             Tab::Mixer => "Per-app volume",
-            Tab::FxSound => "EQ & effects",
+            Tab::Engine => "EQ & effects",
             Tab::Presets => "Your profiles",
             Tab::Advanced => "Tools & info",
         }
@@ -274,7 +274,7 @@ impl BeanXSound {
 
     fn apply_editor(&mut self, now: f64) {
         if !self.fx.is_installed() {
-            self.toast("FxSound is not installed on this PC.", false);
+            self.toast("The audio engine is unavailable.", false);
             return;
         }
         self.fx.apply(self.editor.args());
@@ -588,35 +588,22 @@ impl BeanXSound {
         let _ = now;
     }
 
-    fn tab_fxsound(&mut self, ui: &mut egui::Ui, now: f64) {
-        let installed = self.fx.is_installed();
-        self.page_header(ui, "FxSound engine", "The real FxSound DSP, driven through its command-line bridge.", |app, ui| {
+    fn tab_engine(&mut self, ui: &mut egui::Ui, now: f64) {
+        self.page_header(ui, "Audio engine", "beanxsound's own DSP. Every control here drives the engine directly.", |app, ui| {
             if app.editor_dirty {
                 th::chip(ui, "UNSAVED CHANGES", th::amber());
             }
-            if primary_button(ui, "Apply to FxSound").clicked() {
+            if primary_button(ui, "Apply to engine").clicked() {
                 app.apply_editor(now);
             }
             if ghost_button(ui, "Revert").clicked() {
                 if let Some(status) = app.fx_status.clone() {
                     app.editor = Editor::from_status(&status);
                     app.editor_dirty = false;
-                    app.toast("Reverted to the live FxSound state", true);
+                    app.toast("Reverted to the engine state", true);
                 }
             }
         });
-
-        if !installed {
-            th::card().show(ui, |ui| {
-                ui.label(RichText::new("FxSound was not found").size(17.0).strong().color(th::text()));
-                ui.label(RichText::new("Install FxSound 1.2 or newer and this page will come alive. beanxsound controls the official engine rather than copying its DSP.").size(12.0).color(th::muted()));
-                ui.add_space(8.0);
-                if primary_button(ui, "Get FxSound").clicked() {
-                    audio::open_target("https://www.fxsound.com/");
-                }
-            });
-            return;
-        }
 
         if let Some(err) = &self.fx_error {
             if !self.fx_running {
@@ -624,12 +611,12 @@ impl BeanXSound {
                     ui.horizontal(|ui| {
                         th::icon_badge(ui, "!", th::amber());
                         ui.vertical(|ui| {
-                            ui.label(RichText::new("FxSound is not responding").size(14.0).strong().color(th::text()));
+                            ui.label(RichText::new("Engine is not responding").size(14.0).strong().color(th::text()));
                             ui.label(RichText::new(err).size(11.0).color(th::muted()));
                         });
                     });
                     ui.add_space(6.0);
-                    if primary_button(ui, "Start FxSound").clicked() {
+                    if primary_button(ui, "Start Engine").clicked() {
                         self.fx.launch();
                     }
                 });
@@ -656,7 +643,7 @@ impl BeanXSound {
                     );
                     ui.label(
                         RichText::new(if power {
-                            "FxSound is enhancing the selected output."
+                            "Engine is enhancing the selected output."
                         } else {
                             "The engine is bypassed. Flip the switch to enable it."
                         })
@@ -665,7 +652,7 @@ impl BeanXSound {
                     );
                 });
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    if ghost_button(ui, "Open FxSound").clicked() {
+                    if ghost_button(ui, "Open Engine").clicked() {
                         if let Some(exe) = &self.fx.exe {
                             audio::open_target(&exe.display().to_string());
                         }
@@ -710,14 +697,14 @@ impl BeanXSound {
                         for name in &outputs {
                             if ui.selectable_label(&selected == name, name).clicked() {
                                 self.fx.apply(vec![format!("--output={name}")]);
-                                self.toast(format!("FxSound output → {name}"), true);
+                                self.toast(format!("Engine output → {name}"), true);
                             }
                         }
                     });
 
                 cols[2].label(RichText::new("ENGINE").size(9.5).strong().color(th::faint()));
                 let (label, color) = if self.fx_running {
-                    (format!("FxSound {}", self.fx_status.as_ref().map(|s| s.version.clone()).unwrap_or_default()), th::green())
+                    (format!("Engine {}", self.fx_status.as_ref().map(|s| s.version.clone()).unwrap_or_default()), th::green())
                 } else {
                     ("Not running".to_string(), th::red())
                 };
@@ -804,7 +791,7 @@ impl BeanXSound {
             ui.horizontal(|ui| {
                 ui.vertical(|ui| {
                     ui.label(RichText::new("Effects").size(17.0).strong().color(th::text()));
-                    ui.label(RichText::new("FxSound's five signature stages. Small moves go a long way.").size(10.5).color(th::faint()));
+                    ui.label(RichText::new("Engine's five signature stages. Small moves go a long way.").size(10.5).color(th::faint()));
                 });
             });
             ui.add_space(10.0);
@@ -1043,7 +1030,7 @@ impl BeanXSound {
     }
 
     fn tab_presets(&mut self, ui: &mut egui::Ui, now: f64) {
-        self.page_header(ui, "Presets", "Built-in FxSound profiles and your own saved snapshots.", |app, ui| {
+        self.page_header(ui, "Presets", "Built-in Engine profiles and your own saved snapshots.", |app, ui| {
             if primary_button(ui, "Save current").clicked() {
                 app.new_preset_name.clear();
                 app.dialog = Dialog::SaveNew;
@@ -1062,14 +1049,14 @@ impl BeanXSound {
             .unwrap_or_default();
 
         ui.horizontal(|ui| {
-            ui.label(RichText::new("FXSOUND PRESETS").size(10.0).strong().color(th::faint()));
+            ui.label(RichText::new("PRESETS").size(10.0).strong().color(th::faint()));
             ui.label(RichText::new("click any card to load it into the engine").size(10.0).color(th::faint()));
         });
         ui.add_space(4.0);
 
         if built_in.is_empty() {
             th::card().show(ui, |ui| {
-                empty_state(ui, "No FxSound presets yet", "Start FxSound once so beanxsound can read its preset library.");
+                empty_state(ui, "No Engine presets yet", "Start Engine once so beanxsound can read its preset library.");
             });
         } else {
             let mut clicked: Option<String> = None;
@@ -1088,13 +1075,13 @@ impl BeanXSound {
             }
             ui.add_space(10.0);
             ui.horizontal(|ui| {
-                ui.label(RichText::new("Save current FxSound state as a preset:").size(11.5).color(th::muted()));
+                ui.label(RichText::new("Save current Engine state as a preset:").size(11.5).color(th::muted()));
                 ui.add(egui::TextEdit::singleline(&mut self.new_preset_name).hint_text("Preset name").desired_width(190.0));
-                if ghost_button(ui, "Save to FxSound").clicked() {
+                if ghost_button(ui, "Save to Engine").clicked() {
                     let name = self.new_preset_name.trim().to_string();
                     if !name.is_empty() {
                         self.fx.apply(vec![format!("--save_preset={name}")]);
-                        self.toast("Asked FxSound to save the preset", true);
+                        self.toast("Asked Engine to save the preset", true);
                         self.new_preset_name.clear();
                     }
                 }
@@ -1329,7 +1316,7 @@ impl BeanXSound {
                     if self.admin { th::green() } else { th::amber() },
                 ),
                 (
-                    "FxSound engine",
+                    "Engine engine",
                     match (&self.fx.exe, self.fx_running) {
                         (Some(exe), true) => format!("Running · {}", exe.display()),
                         (Some(exe), false) => format!("Installed · not running · {}", exe.display()),
@@ -1355,7 +1342,7 @@ impl BeanXSound {
             ];
             if let Some(status) = &self.fx_status {
                 rows.push((
-                    "FxSound version",
+                    "Engine version",
                     format!("{} · {} bands · Q {:.1}", status.version, status.equalizer.num_bands, status.equalizer.filter_q),
                     th::muted(),
                 ));
@@ -1377,7 +1364,7 @@ impl BeanXSound {
             ui.add_space(4.0);
             ui.label(
                 RichText::new(
-                    "beanxsound talks to WASAPI and the official FxSound CLI. It never touches audio drivers, never bundles FxSound code, and keeps every setting reversible from Windows itself.",
+                    "beanxsound talks to WASAPI and the official Engine CLI. It never touches audio drivers, never bundles Engine code, and keeps every setting reversible from Windows itself.",
                 )
                 .size(11.5)
                 .color(th::muted()),
@@ -1482,7 +1469,7 @@ impl BeanXSound {
                     .show(ctx, |ui| {
                         ui.set_width(340.0);
                         ui.label(RichText::new(format!("Delete “{name}”?")).size(15.0).strong().color(th::text()));
-                        ui.label(RichText::new("This only removes your beanxsound copy. FxSound presets are untouched.").size(11.0).color(th::muted()));
+                        ui.label(RichText::new("This only removes your beanxsound copy. Engine presets are untouched.").size(11.0).color(th::muted()));
                         ui.add_space(10.0);
                         ui.horizontal(|ui| {
                             if primary_button(ui, "Delete").clicked() {
@@ -1524,7 +1511,7 @@ impl BeanXSound {
                         ui.add_space(12.0);
                         ui.label(RichText::new(format!("Version {} · {} · {}", env!("CARGO_PKG_VERSION"), std::env::consts::ARCH, std::env::consts::OS)).size(11.0).color(th::muted()));
                         ui.add_space(8.0);
-                        ui.label(RichText::new("beanxsound is an independent control surface for Windows audio and the FxSound engine. FxSound is a trademark of FxSound LLC; this project is not affiliated with or endorsed by them.").size(11.0).color(th::muted()));
+                        ui.label(RichText::new("beanxsound is an independent control surface for Windows audio and the Engine engine. Engine is a trademark of Engine LLC; this project is not affiliated with or endorsed by them.").size(11.0).color(th::muted()));
                         ui.add_space(10.0);
                         if ghost_button(ui, "Close").clicked() {
                             ui.close();
@@ -1600,9 +1587,9 @@ impl eframe::App for BeanXSound {
                             self.refresh_fx();
                         }
                         if self.fx_running {
-                            th::chip(ui, "FXSOUND LIVE", th::green());
+                            th::chip(ui, "ENGINE LIVE", th::green());
                         } else {
-                            th::chip(ui, "FXSOUND IDLE", th::faint());
+                            th::chip(ui, "ENGINE IDLE", th::faint());
                         }
                         let active = self.snapshot.devices.iter().filter(|d| d.is_active()).count();
                         th::chip(ui, &format!("{} ACTIVE", active), th::accent());
@@ -1636,7 +1623,7 @@ impl eframe::App for BeanXSound {
                     ui.label(RichText::new("●").size(7.0).color(if self.audio_error.is_none() { th::green() } else { th::red() }));
                     ui.label(RichText::new(if let Some(err) = &self.audio_error { err.clone() } else { "WASAPI connected".to_string() }).size(10.0).color(th::muted()));
                     ui.add_space(10.0);
-                    ui.label(RichText::new(format!("FxSound {}", self.fx_status.as_ref().map(|s| s.version.clone()).unwrap_or_else(|| "—".into()))).size(10.0).color(th::faint()));
+                    ui.label(RichText::new(format!("Engine {}", self.fx_status.as_ref().map(|s| s.version.clone()).unwrap_or_else(|| "—".into()))).size(10.0).color(th::faint()));
                     ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                         ui.label(RichText::new(format!("{} · {}", std::env::consts::ARCH, "beanxsound 0.1.0")).size(10.0).color(th::faint()));
                         if self.admin {
@@ -1658,7 +1645,7 @@ impl eframe::App for BeanXSound {
             .show(ui, |ui| {
                 ui.label(RichText::new("SOUND").size(9.0).strong().color(th::faint()));
                 ui.add_space(4.0);
-                for tab in [Tab::Devices, Tab::Mixer, Tab::FxSound] {
+                for tab in [Tab::Devices, Tab::Mixer, Tab::Engine] {
                     if nav_item(ui, self.tab == tab, tab) {
                         self.tab = tab;
                     }
@@ -1681,7 +1668,7 @@ impl eframe::App for BeanXSound {
                         ui.add_space(4.0);
                         ui.horizontal(|ui| {
                             th::chip(ui, "WASAPI", th::accent());
-                            th::chip(ui, "FxSound", th::green());
+                            th::chip(ui, "Engine", th::green());
                         });
                     });
                 });
@@ -1703,7 +1690,7 @@ impl eframe::App for BeanXSound {
                                 match self.tab {
                                     Tab::Devices => self.tab_devices(ui, now),
                                     Tab::Mixer => self.tab_mixer(ui, now),
-                                    Tab::FxSound => self.tab_fxsound(ui, now),
+                                    Tab::Engine => self.tab_engine(ui, now),
                                     Tab::Presets => self.tab_presets(ui, now),
                                     Tab::Advanced => self.tab_advanced(ui, now),
                                 }
@@ -2352,7 +2339,7 @@ fn builtin_preset_tile(ui: &mut egui::Ui, name: &str, selected: bool) -> bool {
                 ui.vertical(|ui| {
                     ui.label(RichText::new(name).size(13.0).strong().color(th::text()));
                     ui.label(
-                        RichText::new(if selected { "Currently loaded" } else { "FxSound built-in" })
+                        RichText::new(if selected { "Currently loaded" } else { "Engine built-in" })
                             .size(9.5)
                             .color(if selected { th::accent() } else { th::faint() }),
                     );

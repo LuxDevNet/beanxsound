@@ -1,0 +1,63 @@
+; beanxsound audio processing object component.
+; Modelled on the THX APO component package that loads on this machine
+; (C:\Windows\System32\DriverStore\FileRepository\thxrtapo.inf_amd64_617a7a04b2a88647).
+; The shape that matters: Class = AudioProcessingObject, a SWC hardware ID, the DLL
+; into System32, and the two classic registrations applied by the PnP installer.
+[Version]
+Signature   = "$Windows NT$"
+Class       = AudioProcessingObject
+ClassGuid   = {5989fce8-9cd0-467d-8a6a-5419e31529d4}
+Provider    = LuxDev
+DriverVer   = 11/13/2026,0.1.0.0
+CatalogFile = beanxapo.cat
+PnpLockdown = 1
+
+[SourceDisksNames]
+1 = "beanxsound APO Component Source"
+
+[SourceDisksFiles]
+beanxapo.dll = 1
+
+[DestinationDirs]
+DefaultDestDir = 11
+
+[BEANXAPO_CopyFiles]
+beanxapo.dll
+
+[Manufacturer]
+%ManufacturerName% = BEANXAPO_Component,NTamd64.10.0...22000
+
+[BEANXAPO_Component.NTamd64.10.0...22000]
+%BEANXAPO_Component_Description% = BEANXAPO_Component_Install,SWC\VEN_BEANX&CID_BEANXAPO
+
+[BEANXAPO_Component_Install]
+CopyFiles = BEANXAPO_CopyFiles
+AddReg = Registration
+
+[BEANXAPO_Component_Install.Services]
+AddService = ,2
+
+[Registration]
+HKCR,CLSID\%APO_CLSID%,,,%APO_FriendlyName%
+HKCR,CLSID\%APO_CLSID%\InProcServer32,ThreadingModel,,"Both"
+HKCR,CLSID\%APO_CLSID%\InProcServer32,,0x00020000,%%SystemRoot%%\System32\beanxapo.dll
+
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "FriendlyName", ,%APO_FriendlyName%
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "Copyright", ,%MfgCopyright%
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MajorVersion", 0x00010001, 0
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MinorVersion", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "Flags", 0x00010001, 0x0000000d
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MinInputConnections", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MaxInputConnections", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MinOutputConnections", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MaxOutputConnections", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "MaxInstances", 0x00010001, 0xffffffff
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "NumAPOInterfaces", 0x00010001, 1
+HKCR,AudioEngine\AudioProcessingObjects\%APO_CLSID%, "APOInterface0", ,"{FD7F2B29-24D0-4B5C-B177-592C39F9CA10}"
+
+[Strings]
+ManufacturerName = "LuxDev"
+BEANXAPO_Component_Description = "beanxsound Audio Processing Object Component"
+APO_CLSID = "{6F2F0B1C-3C1E-4A5F-9C1D-2B7A5C0E9D41}"
+APO_FriendlyName = "beanxsound Engine"
+MfgCopyright = "MIT"

@@ -1,0 +1,41 @@
+     Locking 1 package to highest compatible version
+      Adding beanxdsp v0.1.0 (Z:\luxdev-z\Dev\002-Tier-Two-Projects\beanxsound\crates\beanxdsp)
+   Compiling beanxdsp v0.1.0 (Z:\luxdev-z\Dev\002-Tier-Two-Projects\beanxsound\crates\beanxdsp)
+   Compiling beanxsound v0.1.0 (Z:\luxdev-z\Dev\002-Tier-Two-Projects\beanxsound)
+warning: variant `NotRunning` is never constructed
+   --> src\engine.rs:122:5
+    |
+120 | pub enum Event {
+    |          ----- variant in this enum
+121 |     Status(Box<Status>),
+122 |     NotRunning,
+    |     ^^^^^^^^^^
+    |
+    = note: `Event` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `state` and `dsp` are never read
+   --> src\engine.rs:131:5
+    |
+126 | pub struct Client {
+    |            ------ fields in this struct
+...
+131 |     state: Status,
+    |     ^^^^^
+132 |     dsp: DspEngine,
+    |     ^^^
+
+warning: methods `state` and `dsp` are never used
+   --> src\engine.rs:192:12
+    |
+135 | impl Client {
+    | ----------- methods in this implementation
+...
+192 |     pub fn state(&self) -> &Status {
+    |            ^^^^^
+...
+197 |     pub fn dsp(&self) -> &DspEngine {
+    |            ^^^
+
+warning: `beanxsound` (bin "beanxsound") generated 3 warnings
+    Finished `release` profile [optimized] target(s) in 35.94s

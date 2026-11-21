@@ -1,0 +1,13 @@
+   Compiling beanxsound v0.1.0 (Z:\luxdev-z\Dev\002-Tier-Two-Projects\beanxsound)
+error: expected item after attributes
+   --> src\audio.rs:524:5
+    |
+275 | impl AudioEngine {
+    |                  - while parsing this item list starting here
+...
+524 |     #[allow(dead_code)]
+    |     ^^^^^^^^^^^^^^^^^^^ expected an item after this
+525 | }
+    | - the item list ends here
+
+error: could not compile `beanxsound` (bin "beanxsound") due to 1 previous error

@@ -152,7 +152,7 @@ pub fn store_path() -> PathBuf {
         .join(r"beanxsound\presets.json")
 }
 
-/// 31-band centre frequencies used by FxSound's full equalizer.
+/// 31-band centre frequencies for the engine's parametric equalizer.
 pub const FREQS_31: [f32; 31] = [
     20.0, 25.0, 31.5, 40.0, 50.0, 63.0, 80.0, 100.0, 125.0, 160.0, 200.0, 250.0, 315.0, 400.0,
     500.0, 630.0, 800.0, 1000.0, 1250.0, 1600.0, 2000.0, 2500.0, 3150.0, 4000.0, 5000.0, 6300.0,
@@ -176,7 +176,7 @@ pub fn freq_label(f: f32) -> String {
     }
 }
 
-/// Build one FxSound CLI invocation from the editor state.
+/// Build one engine command list from the editor state.
 pub fn apply_args(
     bands: &[EqBand],
     master_gain: f32,
@@ -215,7 +215,7 @@ pub fn apply_args(
     ]
 }
 
-/// Frequencies for the band count FxSound was told to use.
+/// Frequencies for the selected band count.
 pub fn freqs_for_count(count: usize) -> Vec<f32> {
     match count {
         5 => vec![60.0, 250.0, 1000.0, 4000.0, 12000.0],

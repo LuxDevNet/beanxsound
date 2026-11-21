@@ -1,0 +1,33 @@
+# Wave 0 T0.1 attempt log, 2026-11-13
+
+## What is proven working
+- beanxapo.dll builds (rustc 1.100.0), 269,312 bytes, panic=unwind
+- COM: CoCreateInstance(CLSID_{6F2F0B1C-...}, IID_IAudioProcessingObject) returns S_OK
+  from an unprivileged PowerShell process (com-test.ps1)
+- Registration shape matches what Windows itself uses, verified byte for byte against
+  HKCR\AudioEngine\AudioProcessingObjects\{C9453E73-8C5C-4463-9984-AF8BAB2F5447}:
+  FriendlyName, Copyright, Major/MinorVersion, Flags, Min/Max in/out connections,
+  MaxInstances, NumAPOInterfaces, APOInterface0
+- Endpoint write works UNELEVATED with KEY_SET_VALUE only (reg.exe and .NET both fail
+  because they ask for KEY_WRITE, which includes CREATE_SUB_KEY that admins lack)
+- Endpoint {269fb022-...} (moniteerrrrsss, the current default) carries our CLSID at
+  {d04e05a6-...},13 (REG_MULTI_SZ) and the value survives an Audiosrv restart
+
+## What does NOT work yet
+- audiodg does not instantiate the APO: no Initialize, no APOProcess, no marker file
+- DisableProtectedAudioDG=1 was set (was absent) and AudioEndpointBuilder + Audiosrv
+  restarted; still no load. A reboot has not been tried.
+- Windows build 10.0.26300 routes OEM APOs through driver-associated software
+  components: the Razer endpoint carries
+  {c792e395-bd30-472d-9a2f-2783d7faf812},100 = SWD\DRIVERENUM\THXAPOCOMPONENT_...
+  That is a registration path our classic HKCR + FxProperties route does not use.
+
+## Open questions, in order of cheapness
+1. Does the DisableProtectedAudioDG change need a full reboot rather than a service restart?
+2. Are the declared Flags (0xF, includes SAMPLESPERFRAME_MUST_MATCH) rejected where the
+   Microsoft APO declares 0xD? Also our DLL lists IAudioProcessingObjectRT as
+   APOInterface0 while the registry row uses the base IID.
+3. Does ANY unsigned third-party APO load on this build? Control experiment: register
+   Equalizer APO's own EqualizerAPO.dll the same way, or run its installer and attach it
+   to one endpoint. If that also fails, the classic APO route is closed on 26300 and the
+   plan's fallback applies.

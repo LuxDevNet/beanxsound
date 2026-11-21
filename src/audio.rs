@@ -520,19 +520,6 @@ impl AudioEngine {
             )
         })
     }
-
-    #[allow(dead_code)]
-    pub fn virtual_fxsound_device(&self) -> Option<String> {
-        let snapshot = self.refresh(true);
-        snapshot
-            .devices
-            .into_iter()
-            .find(|d| {
-                d.name.to_lowercase().contains("fxsound")
-                    || d.description.to_lowercase().contains("fxsound")
-            })
-            .map(|d| d.name)
-    }
 }
 
 fn process_name(pid: u32) -> Option<String> {

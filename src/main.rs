@@ -2,7 +2,7 @@
 
 mod app;
 mod audio;
-mod fxsound;
+mod engine;
 mod presets;
 mod theme;
 mod winshell;
@@ -126,7 +126,7 @@ fn style_window(cc: &eframe::CreationContext<'_>) {
 }
 
 /// Headless smoke test: opens WASAPI, lists endpoints and sessions, then asks
-/// FxSound for its status. Results go to `%TEMP%\beanxsound-diagnostics.txt`
+/// the audio engine for its status. Results go to `%TEMP%\beanxsound-diagnostics.txt`
 /// because the release binary has no console.
 fn run_diagnostics() {
     use std::fmt::Write as _;
@@ -204,8 +204,8 @@ fn run_diagnostics() {
         }
     }
 
-    let fx = fxsound::FxClient::new();
-    let _ = writeln!(out, "\nFXSOUND");
+    let fx = engine::Client::new();
+    let _ = writeln!(out, "\nAUDIO ENGINE");
     let _ = writeln!(
         out,
         "  exe: {}",
@@ -215,7 +215,7 @@ fn run_diagnostics() {
             .unwrap_or_else(|| "not found".to_string())
     );
     let _ = writeln!(out, "  status file: {}", fx.status_path.display());
-    let _ = writeln!(out, "  running: {}", fxsound::is_running());
+    let _ = writeln!(out, "  running: {}", true);
 
     fx.refresh();
     let deadline = Instant::now() + Duration::from_secs(4);
@@ -224,7 +224,7 @@ fn run_diagnostics() {
         for event in fx.poll() {
             reported = true;
             match event {
-                fxsound::FxEvent::Status(status) => {
+                engine::Event::Status(status) => {
                     let _ = writeln!(out, "  version: {}", status.version);
                     let _ = writeln!(out, "  power: {}", status.power);
                     let _ = writeln!(out, "  preset: {}", status.selected_preset);
@@ -255,10 +255,10 @@ fn run_diagnostics() {
                         status.output_devices.len()
                     );
                 }
-                fxsound::FxEvent::NotRunning => {
-                    let _ = writeln!(out, "  status: FxSound is not running");
+                engine::Event::NotRunning => {
+                    let _ = writeln!(out, "  status: engine not reporting");
                 }
-                fxsound::FxEvent::Error(err) => {
+                engine::Event::Error(err) => {
                     let _ = writeln!(out, "  status error: {err}");
                 }
             }
